@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+<title>Sarcasm Detector</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0f0f11;
+    --surface: #1a1a1f;
+    --surface2: #222228;
+    --surface3: #2a2a32;
+    --border: #2e2e38;
+    --border2: #3e3e4e;
+    --text: #f0eff4;
+    --text2: #9895a8;
+    --text3: #5e5b6e;
+    --accent: #7c6af7;
+    --accent2: #9d8fff;
+    --accent-glow: rgba(124,106,247,0.18);
+    --green: #3ecf8e;
+    --green-bg: rgba(62,207,142,0.1);
+    --green-border: rgba(62,207,142,0.25);
+    --red: #f06595;
+    --red-bg: rgba(240,101,149,0.1);
+    --red-border: rgba(240,101,149,0.25);
+    --amber: #f5a623;
+    --amber-bg: rgba(245,166,35,0.1);
+    --amber-border: rgba(245,166,35,0.25);
+    --radius: 12px;
+    --radius-sm: 8px;
+  }
+
+  html { font-size: 16px; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    padding: 3rem 1.5rem 5rem;
+  }
+
+  .page { width: 100%; max-width: 620px; }
+
+  /* Header */
+  .header { margin-bottom: 2.5rem; }
+  .header-eyebrow {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--accent2);
+    margin-bottom: 10px;
+  }
+  .header h1 {
+    font-size: 28px;
+    font-weight: 600;
+    letter-spacing: -.02em;
+    line-height: 1.2;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+  .header p { font-size: 14px; color: var(--text2); line-height: 1.6; }
+
+  /* Card */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+  }
+
+  label.field-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--text3);
+    margin-bottom: 8px;
+  }
+
+  textarea {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    line-height: 1.6;
+    padding: 12px 14px;
+    resize: vertical;
+    min-height: 88px;
+    outline: none;
+    transition: border-color .2s, box-shadow .2s;
+  }
+  textarea::placeholder { color: var(--text3); }
+  textarea:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-glow);
+  }
+  textarea.small { min-height: 46px; font-size: 14px; }
+
+  /* Buttons */
+  .btn-row { display: flex; gap: 8px; margin-top: 12px; align-items: center; }
+  .btn {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    padding: 9px 20px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border2);
+    background: transparent;
+    color: var(--text2);
+    cursor: pointer;
+    transition: all .15s;
+    display: inline-flex; align-items: center; gap: 7px;
+  }
+  .btn:hover { background: var(--surface2); color: var(--text); border-color: var(--border2); }
+  .btn:active { transform: scale(.97); }
+  .btn:disabled { opacity: .35; cursor: not-allowed; transform: none; }
+  .btn.primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+  .btn.primary:hover { background: var(--accent2); border-color: var(--accent2); }
+
+  /* Spinner */
+  .spin {
+    width: 13px; height: 13px;
+    border: 2px solid rgba(255,255,255,.3);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin .65s linear infinite;
+    display: inline-block;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Autocomplete */
+  .ac-wrap { position: relative; width: 100%; }
+  .ac-wrap textarea { width: 100%; }
+  .ac-dropdown {
+    display: none;
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0; right: 0;
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-sm);
+    z-index: 999;
+    max-height: 220px;
+    overflow-y: auto;
+    box-shadow: 0 8px 24px rgba(0,0,0,.45);
+  }
+  .ac-dropdown.visible { display: block; animation: slideIn .15s ease; }
+  .ac-item {
+    padding: 9px 13px;
+    font-size: 13.5px;
+    color: var(--text2);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    border-bottom: 1px solid var(--border);
+    transition: background .1s, color .1s;
+    line-height: 1.4;
+  }
+  .ac-item:last-child { border-bottom: none; }
+  .ac-item:hover, .ac-item.active { background: var(--surface2); color: var(--text); }
+  .ac-item mark { background: none; color: var(--accent2); font-weight: 600; }
+  .ac-item-label { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ac-item-badge {
+    font-size: 10px;
+    font-weight: 500;
+    font-family: 'DM Mono', monospace;
+    padding: 2px 7px;
+    border-radius: 4px;
+    flex-shrink: 0;
+    letter-spacing: .04em;
+  }
+  .ac-item-badge.sarcastic { background: var(--red-bg); color: var(--red); }
+  .ac-item-badge.not_sarcastic { background: var(--green-bg); color: var(--green); }
+  .ac-item-badge.uncertain { background: var(--amber-bg); color: var(--amber); }
+  .ac-item-badge.ctx { background: var(--surface3); color: var(--text3); }
+  .ac-footer {
+    padding: 7px 13px;
+    font-size: 11px;
+    color: var(--text3);
+    font-family: 'DM Mono', monospace;
+    display: flex;
+    justify-content: space-between;
+    border-top: 1px solid var(--border);
+    align-items: center;
+  }
+  .ac-clear-btn {
+    font-size: 11px;
+    color: var(--text3);
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: 'DM Mono', monospace;
+    padding: 0;
+    transition: color .15s;
+  }
+  .ac-clear-btn:hover { color: var(--red); }
+
+  /* Dev note */
+  .dev-note {
+    margin-top: 12px;
+    font-size: 12px;
+    color: var(--text3);
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px 12px;
+    line-height: 1.6;
+    font-family: 'DM Mono', monospace;
+  }
+  .dev-note strong { color: var(--accent2); font-weight: 500; }
+
+  /* Result */
+  .result-wrap {
+    display: none;
+    animation: slideIn .3s ease;
+  }
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .divider { height: 1px; background: var(--border); margin: 1.25rem 0; }
+
+  .result-card {
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    padding: 1.25rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .result-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+  }
+  .result-card.sarcastic { background: var(--red-bg); border-color: var(--red-border); }
+  .result-card.sarcastic::before { background: var(--red); }
+  .result-card.not_sarcastic { background: var(--green-bg); border-color: var(--green-border); }
+  .result-card.not_sarcastic::before { background: var(--green); }
+  .result-card.uncertain { background: var(--amber-bg); border-color: var(--amber-border); }
+  .result-card.uncertain::before { background: var(--amber); }
+
+  .result-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem; }
+  .result-left {}
+  .result-eyebrow { font-size: 11px; font-weight: 500; letter-spacing: .1em; text-transform: uppercase; margin-bottom: 5px; }
+  .result-card.sarcastic .result-eyebrow { color: var(--red); }
+  .result-card.not_sarcastic .result-eyebrow { color: var(--green); }
+  .result-card.uncertain .result-eyebrow { color: var(--amber); }
+
+  .result-verdict { font-size: 22px; font-weight: 600; letter-spacing: -.02em; }
+  .result-conf { font-size: 13px; color: var(--text2); margin-top: 3px; }
+
+  .result-badge {
+    font-size: 28px;
+    width: 48px; height: 48px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .result-card.sarcastic .result-badge { background: var(--red-bg); }
+  .result-card.not_sarcastic .result-badge { background: var(--green-bg); }
+  .result-card.uncertain .result-badge { background: var(--amber-bg); }
+
+  /* Bar */
+  .bar-wrap { margin-bottom: 1rem; }
+  .bar-label { font-size: 12px; color: var(--text3); margin-bottom: 5px; display: flex; justify-content: space-between; }
+  .bar-track {
+    height: 5px;
+    background: var(--surface3);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+  .bar-fill {
+    height: 100%;
+    border-radius: 99px;
+    width: 0%;
+    transition: width .6s cubic-bezier(.4,0,.2,1);
+  }
+  .result-card.sarcastic .bar-fill { background: var(--red); }
+  .result-card.not_sarcastic .bar-fill { background: var(--green); }
+  .result-card.uncertain .bar-fill { background: var(--amber); }
+
+  /* Tags */
+  .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 1rem; }
+  .tag {
+    font-size: 11px;
+    font-weight: 500;
+    padding: 3px 10px;
+    border-radius: 99px;
+    border: 1px solid;
+    letter-spacing: .04em;
+    font-family: 'DM Mono', monospace;
+  }
+  .result-card.sarcastic .tag { color: var(--red); border-color: var(--red-border); background: var(--red-bg); }
+  .result-card.not_sarcastic .tag { color: var(--green); border-color: var(--green-border); background: var(--green-bg); }
+  .result-card.uncertain .tag { color: var(--amber); border-color: var(--amber-border); background: var(--amber-bg); }
+
+  /* Explanation */
+  .explanation {
+    font-size: 13.5px;
+    color: var(--text2);
+    line-height: 1.65;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+  }
+
+  /* Context section */
+  .ctx-section { margin-top: 1rem; }
+  .ctx-toggle-btn {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text2);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    transition: color .15s;
+  }
+  .ctx-toggle-btn:hover { color: var(--accent2); }
+  .ctx-toggle-btn svg { transition: transform .2s; flex-shrink: 0; }
+  .ctx-toggle-btn.open svg { transform: rotate(180deg); }
+
+  .ctx-panel {
+    display: none;
+    margin-top: 1rem;
+    animation: slideIn .2s ease;
+  }
+  .ctx-desc {
+    font-size: 13px;
+    color: var(--text3);
+    line-height: 1.55;
+    margin-bottom: 1rem;
+    padding: 10px 12px;
+    background: var(--surface2);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+  }
+  .ctx-rows { display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; }
+  .ctx-row { display: flex; align-items: flex-start; gap: 10px; }
+  .ctx-num {
+    min-width: 24px; height: 24px;
+    border-radius: 50%;
+    background: var(--surface3);
+    border: 1px solid var(--border2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text3);
+    font-family: 'DM Mono', monospace;
+    margin-top: 11px;
+    flex-shrink: 0;
+  }
+  .ctx-row-inner { flex: 1; }
+  .ctx-badge {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    padding: 2px 7px;
+    border-radius: 4px;
+    margin-bottom: 5px;
+  }
+  .ctx-badge.required { background: rgba(124,106,247,.15); color: var(--accent2); }
+  .ctx-badge.optional { background: var(--surface3); color: var(--text3); }
+
+  /* char counter */
+  .char-count { font-size: 12px; color: var(--text3); margin-left: auto; font-family: 'DM Mono', monospace; }
+
+  /* Error state */
+  .result-card.error { background: rgba(255,80,80,.08); border-color: rgba(255,80,80,.2); }
+  .result-card.error::before { background: #ff5050; }
+  .result-card.error .result-eyebrow { color: #ff7070; }
+  .result-card.error .bar-fill { background: #ff5050; }
+  .result-card.error .tag { color: #ff7070; border-color: rgba(255,80,80,.25); background: rgba(255,80,80,.1); }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="header">
+    <div class="header-eyebrow">NLP Tool</div>
+    <h1>Sarcasm Detector</h1>
+    <p>Paste a sentence or phrase to analyze it for sarcasm. Add prior context for higher accuracy.</p>
+  </div>
+
+  <!-- Main input card -->
+  <div class="card">
+    <label class="field-label" for="main-input">Sentence to analyze</label>
+    <div class="ac-wrap" id="wrap-main-input">
+      <textarea id="main-input" placeholder='e.g. "Oh great, another Monday. Just what I needed."' autocomplete="off"></textarea>
+      <div class="ac-dropdown" id="ac-main-input"></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn primary" id="analyze-btn" onclick="runAnalysis(false)">
+        Analyze
+      </button>
+      <button class="btn" id="clear-btn" onclick="clearAll()">Clear</button>
+      <span class="char-count" id="char-count"></span>
+    </div>
+    <div class="dev-note">
+      <strong>NOTE: </strong><code>This is a prototype model and may not accurately detect all form of sarcasm. It is currently trained mainly on news headline data, so it performs best on headline-style sarcasm and may struggle with conversational or context-heavy cases.</code>
+    </div>
+  </div>
+
+  <!-- Result area -->
+  <div class="result-wrap" id="result-wrap">
+    <div class="divider"></div>
+
+    <div class="result-card" id="result-card">
+      <div class="result-top">
+        <div class="result-left">
+          <div class="result-eyebrow" id="result-eyebrow">Result</div>
+          <div class="result-verdict" id="result-verdict">—</div>
+          <div class="result-conf" id="result-conf"></div>
+        </div>
+        <div class="result-badge" id="result-badge"></div>
+      </div>
+      <div class="bar-wrap">
+        <div class="bar-label">
+          <span id="bar-label-text">Confidence</span>
+          <span id="bar-pct">0%</span>
+        </div>
+        <div class="bar-track"><div class="bar-fill" id="bar-fill"></div></div>
+      </div>
+      <div class="tags" id="tags"></div>
+      <div class="explanation" id="explanation"></div>
+    </div>
+
+    <!-- Context toggle -->
+    <div class="ctx-section">
+      <button class="ctx-toggle-btn" id="ctx-toggle-btn" onclick="toggleContext()">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Test again with context
+      </button>
+
+      <div class="ctx-panel" id="ctx-panel">
+        <div class="ctx-desc">
+          Add 1–4 sentences that came before. Older sentences go lower; sentence #1 is the most recent prior sentence.
+        </div>
+        <div class="ctx-rows">
+          <div class="ctx-row">
+            <div class="ctx-num">1</div>
+            <div class="ctx-row-inner">
+              <span class="ctx-badge required">Required</span>
+              <div class="ac-wrap" id="wrap-ctx1">
+                <textarea class="small" id="ctx1" placeholder="Sentence just before the one you're analyzing…" autocomplete="off"></textarea>
+                <div class="ac-dropdown" id="ac-ctx1"></div>
+              </div>
+            </div>
+          </div>
+          <div class="ctx-row">
+            <div class="ctx-num">2</div>
+            <div class="ctx-row-inner">
+              <span class="ctx-badge optional">Optional</span>
+              <div class="ac-wrap" id="wrap-ctx2">
+                <textarea class="small" id="ctx2" placeholder="Earlier sentence…" autocomplete="off"></textarea>
+                <div class="ac-dropdown" id="ac-ctx2"></div>
+              </div>
+            </div>
+          </div>
+          <div class="ctx-row">
+            <div class="ctx-num">3</div>
+            <div class="ctx-row-inner">
+              <span class="ctx-badge optional">Optional</span>
+              <div class="ac-wrap" id="wrap-ctx3">
+                <textarea class="small" id="ctx3" placeholder="Earlier sentence…" autocomplete="off"></textarea>
+                <div class="ac-dropdown" id="ac-ctx3"></div>
+              </div>
+            </div>
+          </div>
+          <div class="ctx-row">
+            <div class="ctx-num">4</div>
+            <div class="ctx-row-inner">
+              <span class="ctx-badge optional">Optional</span>
+              <div class="ac-wrap" id="wrap-ctx4">
+                <textarea class="small" id="ctx4" placeholder="Earlier sentence…" autocomplete="off"></textarea>
+                <div class="ac-dropdown" id="ac-ctx4"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <button class="btn primary" id="ctx-btn" onclick="runAnalysis(true)">
+          Re-analyze with context
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ─── CONNECT YOUR MODEL HERE ──────────────────────────────────────────────────
+const API_ENDPOINT = "https://8c92-103-212-147-163.ngrok-free.app/predict"; // set to null to use demo mode
+
+async function callModel(text, contextLines) {
+  if (API_ENDPOINT) {
+    const res = await fetch(API_ENDPOINT, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text, context: contextLines })
+    });
+    if (!res.ok) throw new Error(`Backend returned ${res.status}`);
+    return await res.json();
+  }
+  // ── DEMO MODE ──────────────────────────────────────────────────────────────
+  await new Promise(r => setTimeout(r, 800 + Math.random() * 500));
+  const lower = text.toLowerCase();
+  const signals = ["oh great","yeah right","totally","oh sure","wonderful","fantastic","love it","perfect","brilliant","obviously","clearly","just what i needed","what could go wrong","surprise surprise","best day ever","not like","as if","sure thing","absolutely","no problem"];
+  let score = 28 + Math.random() * 12;
+  signals.forEach(w => { if (lower.includes(w)) score += 18 + Math.random() * 10; });
+  score = Math.min(score, 96);
+  if (score > 65) return { label: "sarcastic", confidence: Math.round(score), explanation: "Detected positive framing in a likely negative context.", tags: ["irony", "positive-framing"] };
+  if (score < 42) return { label: "not_sarcastic", confidence: Math.round(100 - score), explanation: "No strong sarcasm signals detected.", tags: ["sincere", "direct"] };
+  return { label: "uncertain", confidence: Math.round(score), explanation: "Ambiguous — try adding context.", tags: ["ambiguous"] };
+  // ──────────────────────────────────────────────────────────────────────────
+}
+// ──────────────────────────────────────────────────────────────────────────────
+
+// ─── HISTORY / AUTOCOMPLETE ──────────────────────────────────────────────────
+const STORAGE_KEY = "sarcasm_history";
+const MAX_HISTORY = 120;
+
+function loadHistory() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]"); }
+  catch { return []; }
+}
+
+function saveHistory(h) {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(h)); }
+  catch {}
+}
+
+// Add an entry: { text, label, ts }
+// label is null for context sentences (no result associated)
+function addToHistory(text, label) {
+  if (!text || text.length < 3) return;
+  let h = loadHistory();
+  // Remove duplicate text entry if exists, then prepend fresh
+  h = h.filter(e => e.text.toLowerCase() !== text.toLowerCase());
+  h.unshift({ text, label: label || null, ts: Date.now() });
+  if (h.length > MAX_HISTORY) h = h.slice(0, MAX_HISTORY);
+  saveHistory(h);
+}
+
+// ─── AUTOCOMPLETE ENGINE ─────────────────────────────────────────────────────
+const acState = {}; // keyed by textarea id: { activeIdx }
+
+function initAC(inputId) {
+  const ta = document.getElementById(inputId);
+  const dd = document.getElementById("ac-" + inputId);
+  if (!ta || !dd) return;
+  acState[inputId] = { activeIdx: -1 };
+
+  ta.addEventListener("input", () => renderDropdown(inputId));
+  ta.addEventListener("focus", () => renderDropdown(inputId));
+
+  ta.addEventListener("keydown", e => {
+    const items = dd.querySelectorAll(".ac-item");
+    if (!items.length || !dd.classList.contains("visible")) return;
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      acState[inputId].activeIdx = Math.min(acState[inputId].activeIdx + 1, items.length - 1);
+      updateActive(inputId);
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      acState[inputId].activeIdx = Math.max(acState[inputId].activeIdx - 1, -1);
+      updateActive(inputId);
+    } else if (e.key === "Enter" && acState[inputId].activeIdx >= 0) {
+      e.preventDefault();
+      items[acState[inputId].activeIdx].click();
+    } else if (e.key === "Escape") {
+      closeDropdown(inputId);
+    }
+  });
+
+  // Close on outside click
+  document.addEventListener("click", e => {
+    if (!ta.contains(e.target) && !dd.contains(e.target)) closeDropdown(inputId);
+  });
+}
+
+function renderDropdown(inputId) {
+  const ta = document.getElementById(inputId);
+  const dd = document.getElementById("ac-" + inputId);
+  const query = ta.value.trim().toLowerCase();
+  const h = loadHistory();
+
+  const matches = query.length === 0
+    ? h.slice(0, 8)
+    : h.filter(e => e.text.toLowerCase().includes(query)).slice(0, 8);
+
+  if (!matches.length) { closeDropdown(inputId); return; }
+
+  acState[inputId].activeIdx = -1;
+
+  const isMain = inputId === "main-input";
+
+  dd.innerHTML = matches.map((entry, i) => {
+    const t = escHtml(entry.text);
+    const highlighted = query
+      ? t.replace(new RegExp(escRegex(escHtml(query)), "gi"), m => `<mark>${m}</mark>`)
+      : t;
+    let badge = "";
+    if (isMain && entry.label) {
+      const badgeMap = { sarcastic: "😏 sarcastic", not_sarcastic: "✓ sincere", uncertain: "? uncertain" };
+      badge = `<span class="ac-item-badge ${entry.label}">${badgeMap[entry.label] || entry.label}</span>`;
+    } else if (!isMain) {
+      badge = `<span class="ac-item-badge ctx">ctx</span>`;
+    }
+    return `<div class="ac-item" data-idx="${i}" onclick="selectAC('${inputId}', ${i})">
+      <span class="ac-item-label">${highlighted}</span>${badge}
+    </div>`;
+  }).join("") +
+  `<div class="ac-footer">
+    <span>${h.length} saved · Tab/↑↓ to navigate</span>
+    <button class="ac-clear-btn" onclick="clearHistory(event)">clear history</button>
+  </div>`;
+
+  dd.classList.add("visible");
+}
+
+function updateActive(inputId) {
+  const dd = document.getElementById("ac-" + inputId);
+  dd.querySelectorAll(".ac-item").forEach((el, i) => {
+    el.classList.toggle("active", i === acState[inputId].activeIdx);
+  });
+}
+
+function selectAC(inputId, idx) {
+  const ta = document.getElementById(inputId);
+  const h = loadHistory();
+  const query = ta.value.trim().toLowerCase();
+  const matches = query.length === 0
+    ? h.slice(0, 8)
+    : h.filter(e => e.text.toLowerCase().includes(query)).slice(0, 8);
+  if (matches[idx]) {
+    ta.value = matches[idx].text;
+    ta.dispatchEvent(new Event("input"));
+    closeDropdown(inputId);
+    ta.focus();
+    // update char count if main input
+    if (inputId === "main-input") {
+      document.getElementById("char-count").textContent = ta.value.length + " chars";
+    }
+  }
+}
+
+function closeDropdown(inputId) {
+  const dd = document.getElementById("ac-" + inputId);
+  if (dd) dd.classList.remove("visible");
+  if (acState[inputId]) acState[inputId].activeIdx = -1;
+}
+
+function closeAllDropdowns() {
+  ["main-input","ctx1","ctx2","ctx3","ctx4"].forEach(closeDropdown);
+}
+
+function clearHistory(e) {
+  e.stopPropagation();
+  saveHistory([]);
+  closeAllDropdowns();
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+function escRegex(s) {
+  return s.replace(/[.*+?^${}()|[\]\\]/g,"\\$&");
+}
+
+// Init autocomplete on all inputs
+["main-input","ctx1","ctx2","ctx3","ctx4"].forEach(initAC);
+// ──────────────────────────────────────────────────────────────────────────────
+
+let ctxOpen = false;
+
+document.getElementById("main-input").addEventListener("input", function() {
+  const n = this.value.length;
+  document.getElementById("char-count").textContent = n ? n + " chars" : "";
+});
+
+async function runAnalysis(withContext) {
+  const text = document.getElementById("main-input").value.trim();
+  if (!text) { document.getElementById("main-input").focus(); return; }
+
+  let contextLines = [];
+  if (withContext) {
+    const v1 = document.getElementById("ctx1").value.trim();
+    if (!v1) { document.getElementById("ctx1").focus(); return; }
+    [1,2,3,4].forEach(i => {
+      const v = document.getElementById("ctx" + i).value.trim();
+      if (v) { contextLines.push(v); addToHistory(v, null); }
+    });
+  }
+
+  closeAllDropdowns();
+
+  const btn = withContext ? document.getElementById("ctx-btn") : document.getElementById("analyze-btn");
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spin"></span> Analyzing…';
+
+  try {
+    const res = await callModel(text, contextLines);
+    // Save the analyzed sentence with its result label
+    addToHistory(text, res.label);
+    showResult(res, withContext);
+  } catch(e) {
+    addToHistory(text, null);
+    showError(e.message);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = withContext ? "Re-analyze with context" : "Analyze";
+  }
+}
+
+function showResult(res, withContext) {
+  const wrap = document.getElementById("result-wrap");
+  const card = document.getElementById("result-card");
+  wrap.style.display = "block";
+
+  const cfg = {
+    sarcastic:     { emoji: "😏", label: withContext ? "Result · with context" : "Result", verdict: "Sarcastic" },
+    not_sarcastic: { emoji: "✓",  label: withContext ? "Result · with context" : "Result", verdict: "Not sarcastic" },
+    uncertain:     { emoji: "?",  label: withContext ? "Result · with context" : "Result", verdict: "Uncertain" },
+  };
+  const c = cfg[res.label] || cfg["uncertain"];
+  const label = res.label || "uncertain";
+
+  card.className = "result-card " + label;
+  document.getElementById("result-eyebrow").textContent = c.label;
+  document.getElementById("result-verdict").textContent = c.verdict;
+  document.getElementById("result-conf").textContent = "Confidence: " + res.confidence + "%";
+  document.getElementById("result-badge").textContent = c.emoji;
+  document.getElementById("bar-fill").style.width = res.confidence + "%";
+  document.getElementById("bar-pct").textContent = res.confidence + "%";
+  document.getElementById("bar-label-text").textContent = label === "not_sarcastic" ? "Sincerity confidence" : "Sarcasm confidence";
+  document.getElementById("tags").innerHTML = (res.tags || []).map(t => `<span class="tag">${t}</span>`).join("");
+  document.getElementById("explanation").textContent = res.explanation || "";
+
+  wrap.scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+
+function showError(msg) {
+  const wrap = document.getElementById("result-wrap");
+  const card = document.getElementById("result-card");
+  wrap.style.display = "block";
+  card.className = "result-card error";
+  document.getElementById("result-eyebrow").textContent = "Error";
+  document.getElementById("result-verdict").textContent = "Connection failed";
+  document.getElementById("result-conf").textContent = "";
+  document.getElementById("result-badge").textContent = "!";
+  document.getElementById("bar-fill").style.width = "0%";
+  document.getElementById("bar-pct").textContent = "";
+  document.getElementById("tags").innerHTML = "";
+  document.getElementById("explanation").textContent = msg + " — Make sure your backend is running and API_ENDPOINT is set correctly.";
+}
+
+function toggleContext() {
+  ctxOpen = !ctxOpen;
+  document.getElementById("ctx-panel").style.display = ctxOpen ? "block" : "none";
+  const btn = document.getElementById("ctx-toggle-btn");
+  btn.classList.toggle("open", ctxOpen);
+}
+
+function clearAll() {
+  ["main-input","ctx1","ctx2","ctx3","ctx4"].forEach(id => document.getElementById(id).value = "");
+  document.getElementById("result-wrap").style.display = "none";
+  document.getElementById("char-count").textContent = "";
+  ctxOpen = false;
+  document.getElementById("ctx-panel").style.display = "none";
+  document.getElementById("ctx-toggle-btn").classList.remove("open");
+  closeAllDropdowns();
+  document.getElementById("main-input").focus();
+}
+</script>
+</body>
+</html>

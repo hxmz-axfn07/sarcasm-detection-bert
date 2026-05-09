@@ -1,0 +1,35 @@
+{
+  "model_name": "bert-base-uncased",
+  "seed": 42,
+  "max_length": 128,
+  "class_weights": [
+    0.9549533128738403,
+    1.0495070219039917
+  ],
+  "default_threshold": 0.5,
+  "best_threshold": 0.39654916524887085,
+  "default_threshold_metrics": {
+    "accuracy": 0.940251572327044,
+    "precision": 0.9375917767988252,
+    "recall": 0.9369038884812912,
+    "f1": 0.9372477064220184
+  },
+  "best_threshold_metrics": {
+    "accuracy": 0.9406009783368274,
+    "precision": 0.936996336996337,
+    "recall": 0.9383712399119589,
+    "f1": 0.9376832844574781
+  },
+  "roc_auc": 0.9832431696944454,
+  "pr_auc": 0.9792181492452695,
+  "artifacts": [
+    "confusion_matrix.png",
+    "confusion_matrix_default_threshold.png",
+    "roc_curve.png",
+    "pr_curve.png",
+    "threshold_vs_f1.png",
+    "model_performance.png",
+    "training_curves.png",
+    "training_log.csv"
+  ]
+}

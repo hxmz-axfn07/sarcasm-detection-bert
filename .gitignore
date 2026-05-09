@@ -1,0 +1,15 @@
+# environments
+.venv/
+
+# python cache
+__pycache__/
+
+# jupyter cache
+.ipynb_checkpoints/
+
+# reports/temp
+_reports/
+
+# optional large datasets
+train-balanced-sarcasm.csv
+Sarcasm_Headlines_Dataset_v2.json
