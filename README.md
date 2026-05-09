@@ -174,7 +174,6 @@ This project is built around the **News Headlines Dataset for Sarcasm Detection*
 Dataset source:
 
 - [Kaggle: News Headlines Dataset For Sarcasm Detection](https://www.kaggle.com/datasets/rmisra/news-headlines-dataset-for-sarcasm-detection)
-- [GitHub: rishabhmisra/News-Headlines-Dataset-For-Sarcasm-Detection](https://github.com/rishabhmisra/News-Headlines-Dataset-For-Sarcasm-Detection)
 
 Expected dataset file name for training:
 
