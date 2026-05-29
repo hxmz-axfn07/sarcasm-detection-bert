@@ -1,11 +1,13 @@
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 import torch
 import torch.nn.functional as F
+from pathlib import Path
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+MODEL_DIR = Path(__file__).resolve().parents[1] / "models" / "final_model"
 
-tokenizer = AutoTokenizer.from_pretrained("final_model")
-model = AutoModelForSequenceClassification.from_pretrained("final_model")
+tokenizer = AutoTokenizer.from_pretrained(MODEL_DIR)
+model = AutoModelForSequenceClassification.from_pretrained(MODEL_DIR)
 
 model.to(device)
 model.eval()

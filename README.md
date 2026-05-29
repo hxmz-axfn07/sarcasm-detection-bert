@@ -48,7 +48,7 @@ The system is designed to:
 - Stratified train/test split for stable evaluation
 - Threshold optimization based on F1-score
 - FastAPI backend with `/predict` endpoint
-- Browser-based frontend in `index.html`
+- Browser-based frontend in `frontend/index.html`
 - Confidence score, explanation, and tags in API response
 - Saved evaluation reports and plots
 - Git LFS support for large model weights
@@ -75,26 +75,26 @@ The system is designed to:
 
 ```text
 .
-├── api.py
-├── bert.py
-├── inf.py
-├── index.html
-├── final_model/
+├── src/api.py
+├── src/train.py
+├── src/inference.py
+├── frontend/index.html
+├── models/final_model/
 │   ├── config.json
 │   ├── model.safetensors
 │   ├── tokenizer.json
 │   ├── tokenizer_config.json
 │   ├── special_tokens_map.json
 │   └── vocab.txt
-├── final_metrics.json
-├── training_log.csv
-├── confusion_matrix.png
-├── confusion_matrix_default_threshold.png
-├── roc_curve.png
-├── pr_curve.png
-├── threshold_vs_f1.png
-├── training_curves.png
-├── model_performance.png
+├── results/final_metrics.json
+├── results/training_log.csv
+├── assets/confusion-matrix.png
+├── assets/confusion-matrix-default-threshold.png
+├── assets/roc-curve.png
+├── assets/pr-curve.png
+├── assets/threshold-vs-f1.png
+├── assets/training-curves.png
+├── assets/model-performance.png
 ├── bert_final_training.ipynb
 ├── inf.ipynb
 ├── .gitattributes
@@ -106,13 +106,13 @@ The system is designed to:
 
 | File | Purpose |
 | --- | --- |
-| `bert.py` | Full model training and evaluation script |
-| `inf.py` | Loads the saved model and runs single-text inference |
-| `api.py` | FastAPI backend for serving the model and UI |
-| `index.html` | Browser-based sarcasm detector UI |
-| `final_model/` | Saved BERT model and tokenizer files |
-| `final_metrics.json` | Final evaluation metrics and threshold information |
-| `training_log.csv` | Training/evaluation logs exported from Trainer |
+| `src/train.py` | Full model training and evaluation script |
+| `src/inference.py` | Loads the saved model and runs single-text inference |
+| `src/api.py` | FastAPI backend for serving the model and UI |
+| `frontend/index.html` | Browser-based sarcasm detector UI |
+| `models/final_model/` | Saved BERT model and tokenizer files |
+| `results/final_metrics.json` | Final evaluation metrics and threshold information |
+| `results/training_log.csv` | Training/evaluation logs exported from Trainer |
 | `*.png` plots | Evaluation and training visualizations |
 
 ---
@@ -139,7 +139,7 @@ The training script uses a custom `WeightedTrainer` class to apply class weights
 
 ## Performance
 
-Evaluation results from `final_metrics.json`:
+Evaluation results from `results/final_metrics.json`:
 
 | Metric | Default Threshold 0.50 | Best F1 Threshold 0.3965 |
 | --- | ---: | ---: |
@@ -159,11 +159,11 @@ Additional ranking metrics:
 
 | Confusion Matrix | ROC Curve | Precision-Recall Curve |
 | --- | --- | --- |
-| ![Confusion Matrix](confusion_matrix.png) | ![ROC Curve](roc_curve.png) | ![Precision-Recall Curve](pr_curve.png) |
+| ![Confusion Matrix](assets/confusion-matrix.png) | ![ROC Curve](assets/roc-curve.png) | ![Precision-Recall Curve](assets/pr-curve.png) |
 
 | Threshold vs F1 | Training Curves | Model Performance |
 | --- | --- | --- |
-| ![Threshold vs F1](threshold_vs_f1.png) | ![Training Curves](training_curves.png) | ![Model Performance](model_performance.png) |
+| ![Threshold vs F1](assets/threshold-vs-f1.png) | ![Training Curves](assets/training-curves.png) | ![Model Performance](assets/model-performance.png) |
 
 ---
 
@@ -178,7 +178,7 @@ Dataset source:
 Expected dataset file name for training:
 
 ```text
-Sarcasm_Headlines_Dataset_v2.json
+data/Sarcasm_Headlines_Dataset_v2.json
 ```
 
 Expected columns:
@@ -242,15 +242,15 @@ If you are using a CUDA-enabled GPU, install the PyTorch build that matches your
 ### Option 1: Run Inference from Python
 
 ```bash
-python inf.py
+python src/inference.py
 ```
 
-This loads the saved model from `final_model/` and prints sample predictions.
+This loads the saved model from `models/final_model/` and prints sample predictions.
 
 ### Option 2: Run the FastAPI Backend
 
 ```bash
-uvicorn api:app --reload
+uvicorn src.api:app --reload
 ```
 
 Then open:
@@ -261,7 +261,7 @@ http://127.0.0.1:8000
 
 ### Frontend Endpoint Note
 
-The frontend sends requests to the value of `API_ENDPOINT` inside `index.html`.
+The frontend sends requests to the value of `API_ENDPOINT` inside `frontend/index.html`.
 
 For local FastAPI usage, set it to:
 
@@ -324,11 +324,11 @@ Invoke-RestMethod `
 To retrain the model from scratch:
 
 1. Download the dataset.
-2. Place `Sarcasm_Headlines_Dataset_v2.json` in the project root.
+2. Place `Sarcasm_Headlines_Dataset_v2.json` in the `data/` folder.
 3. Run:
 
 ```bash
-python bert.py
+python src/train.py
 ```
 
 The training script will:
@@ -341,22 +341,22 @@ The training script will:
 - fine-tune `bert-base-uncased`
 - apply weighted cross-entropy loss
 - evaluate default and best-threshold predictions
-- save model files to `final_model/`
+- save model files to `models/final_model/`
 - save plots and metrics to the project root
 
 Generated outputs:
 
 ```text
-final_model/
-final_metrics.json
-training_log.csv
-confusion_matrix.png
-confusion_matrix_default_threshold.png
-roc_curve.png
-pr_curve.png
-threshold_vs_f1.png
-model_performance.png
-training_curves.png
+models/final_model/
+results/final_metrics.json
+results/training_log.csv
+assets/confusion-matrix.png
+assets/confusion-matrix-default-threshold.png
+assets/roc-curve.png
+assets/pr-curve.png
+assets/threshold-vs-f1.png
+assets/model-performance.png
+assets/training-curves.png
 ```
 
 ---
@@ -367,15 +367,15 @@ The project includes the following model evaluation outputs:
 
 | Artifact | Description |
 | --- | --- |
-| `confusion_matrix.png` | Confusion matrix at the optimized threshold |
-| `confusion_matrix_default_threshold.png` | Confusion matrix at threshold 0.50 |
-| `roc_curve.png` | Receiver Operating Characteristic curve |
-| `pr_curve.png` | Precision-Recall curve |
-| `threshold_vs_f1.png` | F1-score across different classification thresholds |
-| `model_performance.png` | Bar chart of key metrics |
-| `training_curves.png` | Training loss, evaluation loss, and evaluation F1 over epochs |
-| `training_log.csv` | Trainer log history |
-| `final_metrics.json` | Machine-readable evaluation summary |
+| `assets/confusion-matrix.png` | Confusion matrix at the optimized threshold |
+| `assets/confusion-matrix-default-threshold.png` | Confusion matrix at threshold 0.50 |
+| `assets/roc-curve.png` | Receiver Operating Characteristic curve |
+| `assets/pr-curve.png` | Precision-Recall curve |
+| `assets/threshold-vs-f1.png` | F1-score across different classification thresholds |
+| `assets/model-performance.png` | Bar chart of key metrics |
+| `assets/training-curves.png` | Training loss, evaluation loss, and evaluation F1 over epochs |
+| `results/training_log.csv` | Trainer log history |
+| `results/final_metrics.json` | Machine-readable evaluation summary |
 
 ---
 

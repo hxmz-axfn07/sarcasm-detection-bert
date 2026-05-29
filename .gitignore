@@ -13,3 +13,4 @@ _reports/
 # optional large datasets
 train-balanced-sarcasm.csv
 Sarcasm_Headlines_Dataset_v2.json
+data/Sarcasm_Headlines_Dataset_v2.json

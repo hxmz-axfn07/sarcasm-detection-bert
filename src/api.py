@@ -1,10 +1,17 @@
-# api.py
+from pathlib import Path
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List
 
-from inf import predict          # import directly from your inf.py
+try:
+    from .inference import predict
+except ImportError:
+    from inference import predict
+
+BASE_DIR = Path(__file__).resolve().parents[1]
+FRONTEND_DIR = BASE_DIR / "frontend"
 
 app = FastAPI()
 
@@ -23,21 +30,21 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 
 
-app.mount("/static", StaticFiles(directory="."), name="static")
+app.mount("/static", StaticFiles(directory=FRONTEND_DIR), name="static")
 
 @app.get("/")
 def serve_ui():
-    return FileResponse("index.html")
+    return FileResponse(FRONTEND_DIR / "index.html")
 
 @app.post("/predict")
 def run_predict(req: PredictRequest):
-    # Join context list into a single string (matches inf.py's expected input)
+    # Join context list into a single string (matches inference.py's expected input)
     # Training used a single shifted sentence, but joining multiple is harmless
     context_str = " ".join(req.context) if req.context else ""
 
     result = predict(req.text, context=context_str)
 
-    # Map inf.py's emoji labels to the UI's label keys
+    # Map inference.py's emoji labels to the UI's label keys
     raw_label = result["label"]
     if "Sarcastic 😏" in raw_label:
         ui_label = "sarcastic"

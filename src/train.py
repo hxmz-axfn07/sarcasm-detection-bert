@@ -1,6 +1,7 @@
 import inspect
 import json
 import random
+from pathlib import Path
 
 import matplotlib
 import numpy as np
@@ -39,8 +40,12 @@ MAX_LENGTH = 128
 TRAIN_BATCH_SIZE = 8
 EVAL_BATCH_SIZE = 8
 NUM_EPOCHS = 4
-OUTPUT_DIR = "./results"
-FINAL_MODEL_DIR = "final_model"
+BASE_DIR = Path(__file__).resolve().parents[1]
+DATA_PATH = BASE_DIR / "data" / "Sarcasm_Headlines_Dataset_v2.json"
+ASSETS_DIR = BASE_DIR / "assets"
+RESULTS_DIR = BASE_DIR / "results"
+OUTPUT_DIR = str(RESULTS_DIR)
+FINAL_MODEL_DIR = BASE_DIR / "models" / "final_model"
 
 
 def set_seed(seed):
@@ -57,7 +62,7 @@ set_seed(SEED)
 # =========================
 # LOAD DATA
 # =========================
-df = pd.read_json("Sarcasm_Headlines_Dataset_v2.json", lines=True)
+df = pd.read_json(DATA_PATH, lines=True)
 
 df = df.rename(
     columns={
@@ -288,13 +293,13 @@ def save_confusion_matrix(labels, preds, path, title):
 save_confusion_matrix(
     true_labels,
     default_preds,
-    "confusion_matrix_default_threshold.png",
+    ASSETS_DIR / "confusion-matrix-default-threshold.png",
     "Confusion Matrix (Threshold 0.50)",
 )
 save_confusion_matrix(
     true_labels,
     best_preds,
-    "confusion_matrix.png",
+    ASSETS_DIR / "confusion-matrix.png",
     f"Confusion Matrix (Best Threshold {best_threshold:.3f})",
 )
 
@@ -306,7 +311,7 @@ plt.ylabel("True Positive Rate")
 plt.title("ROC Curve")
 plt.legend()
 plt.tight_layout()
-plt.savefig("roc_curve.png", dpi=200)
+plt.savefig(ASSETS_DIR / "roc-curve.png", dpi=200)
 plt.close()
 
 plt.figure(figsize=(6, 5))
@@ -316,7 +321,7 @@ plt.ylabel("Precision")
 plt.title("Precision-Recall Curve")
 plt.legend()
 plt.tight_layout()
-plt.savefig("pr_curve.png", dpi=200)
+plt.savefig(ASSETS_DIR / "pr-curve.png", dpi=200)
 plt.close()
 
 plt.figure(figsize=(6, 5))
@@ -327,7 +332,7 @@ plt.ylabel("F1 Score")
 plt.title("Threshold vs F1 Score")
 plt.legend()
 plt.tight_layout()
-plt.savefig("threshold_vs_f1.png", dpi=200)
+plt.savefig(ASSETS_DIR / "threshold-vs-f1.png", dpi=200)
 plt.close()
 
 plt.figure(figsize=(6, 5))
@@ -343,11 +348,11 @@ plt.bar(
 plt.ylim(0, 1)
 plt.title("Model Performance (Best Threshold)")
 plt.tight_layout()
-plt.savefig("model_performance.png", dpi=200)
+plt.savefig(ASSETS_DIR / "model-performance.png", dpi=200)
 plt.close()
 
 log_history = pd.DataFrame(trainer.state.log_history)
-log_history.to_csv("training_log.csv", index=False)
+log_history.to_csv(RESULTS_DIR / "training_log.csv", index=False)
 
 plt.figure(figsize=(7, 5))
 if "epoch" in log_history and "loss" in log_history:
@@ -363,7 +368,7 @@ plt.xlabel("Epoch")
 plt.title("Training Curves")
 plt.legend()
 plt.tight_layout()
-plt.savefig("training_curves.png", dpi=200)
+plt.savefig(ASSETS_DIR / "training-curves.png", dpi=200)
 plt.close()
 
 
@@ -385,22 +390,22 @@ final_report = {
     "roc_auc": roc_auc,
     "pr_auc": pr_auc,
     "artifacts": [
-        "confusion_matrix.png",
-        "confusion_matrix_default_threshold.png",
-        "roc_curve.png",
-        "pr_curve.png",
-        "threshold_vs_f1.png",
-        "model_performance.png",
-        "training_curves.png",
-        "training_log.csv",
+        "assets/confusion-matrix.png",
+        "assets/confusion-matrix-default-threshold.png",
+        "assets/roc-curve.png",
+        "assets/pr-curve.png",
+        "assets/threshold-vs-f1.png",
+        "assets/model-performance.png",
+        "assets/training-curves.png",
+        "results/training_log.csv",
     ],
 }
 
-with open("final_metrics.json", "w", encoding="utf-8") as f:
+with open(RESULTS_DIR / "final_metrics.json", "w", encoding="utf-8") as f:
     json.dump(final_report, f, indent=2)
 
-with open(f"{FINAL_MODEL_DIR}/threshold.txt", "w", encoding="utf-8") as f:
+with open(FINAL_MODEL_DIR / "threshold.txt", "w", encoding="utf-8") as f:
     f.write(str(best_threshold))
 
-print("\nTraining complete. Model saved to final_model.")
-print("Saved: final_metrics.json, confusion_matrix.png, roc_curve.png, pr_curve.png")
+print("\nTraining complete. Model saved to models/final_model.")
+print("Saved: results/final_metrics.json, assets/confusion-matrix.png, assets/roc-curve.png, assets/pr-curve.png")

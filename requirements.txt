@@ -1,0 +1,10 @@
+datasets
+fastapi
+matplotlib
+numpy
+pandas
+pydantic
+scikit-learn
+torch
+transformers
+uvicorn
