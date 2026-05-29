@@ -1,5 +1,9 @@
 # Sarcasm Detection in News Headlines Using BERT
 
+<p align="center">
+  <img src="assets/sarcasm.jpg" alt="Sarcasm Definition" width="500"/>
+</p>
+
 A transformer-based sarcasm detection system that classifies news headlines as **sarcastic** or **not sarcastic** using a fine-tuned BERT model. The project includes model training, evaluation artifacts, a FastAPI backend, and a browser-based user interface for real-time predictions.
 
 Repository: [hxmz-axfn07/sarcasm-detection-bert](https://github.com/hxmz-axfn07/sarcasm-detection-bert)
